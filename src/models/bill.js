@@ -5,6 +5,11 @@ const billSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    userName:
+    {
+        type: String,
+        required: true
+    },
     amount: {
         type: Number,
         required: true
@@ -25,7 +30,7 @@ const billSchema = new mongoose.Schema({
     paymentConfirmationStatus:
     {
         type: String,
-        default: "PENDING"
+        default: "NOT INITIATED PAYMENT"
     },
 
     billUser: {

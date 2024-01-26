@@ -2,7 +2,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import Form from '@/components/Form';
 import ExistingBills from '@/components/ExistingBills';
@@ -15,28 +15,34 @@ export default function Home() {
       router.push('/signin')
     }
   })
-  // useEffect(()=>{
+  const [isAdmin, setIsAdmin] = useState(false)
+  useEffect(() => {
+    if (session && session.data && session.data.user && session.data.user.role && session.data.user.role === "ADMIN") {
+      setIsAdmin(true)
+      console.log(session)
+      router.push('/admin')
+    }
+  }, [session])
 
-  // },[session])
-  async function callApi() {
-    const x = await fetch('/api/getbills')
-    // const y = await x.json()
-    const y = await x.json()
-    console.log("res", y);
-  }
+
   return (
-    <main className='min-h-screen flex flex-col justify-center items-center' >
+    <div>
+
+      {!isAdmin && <main className=' flex flex-col h-screen justify-center items-center' >
 
 
-      <div className='flex justify-center items-center w-full' >
+        <div className='flex justify-center items-center flex-col' >
+          {!isAdmin && <ExistingBills />}
+          {!isAdmin && <div className='flex w-full justify-center items-center '>
 
-        {/* <span className='border   w-full mx-6'></span> <p className='text-center my-10'>OR</p> <span className=' border  w-full mx-6'></span> */}
-      </div>
+            <span className='border-b border-black  w-full mx-6'></span> <p className='text-center my-10'>OR</p> <span className=' border-b border-black w-full mx-6'></span>
+          </div>}
+        </div>
 
 
-      <Form />
+        {!isAdmin && <Form />}
 
-      {/* <Button onClick={callApi}>call api</Button> */}
-    </main>
+      </main>}
+    </div>
   )
 }

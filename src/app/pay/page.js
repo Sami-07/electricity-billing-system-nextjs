@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
-import { Input } from './ui/input'
-import { Button } from './ui/button'
+"use client"
+import React, { useEffect, useState } from 'react'
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import {
     Select,
     SelectContent,
@@ -21,7 +22,11 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 export default function Form() {
+    const searchParams = useSearchParams()
+
+    const billId = searchParams.get('billid')
     const router = useRouter();
     const [uniqueServiceNumber, setuniqueServiceNumber] = useState('')
     const [amount, setAmount] = useState('')
@@ -29,16 +34,25 @@ export default function Form() {
     const [credentials, setCredentials] = useState('')
     const [error, setError] = useState('')
     const [isClicked, setIsClicked] = useState(false)
+    const [billData, setBillData] = useState(null)
+    useEffect(() => {
+        async function getBillDetails() {
+            const res = await fetch("/api/getBillInfo", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ billId: billId }),
+            })
+            const data = await res.json()
+            console.log("bill data", data)
+            setBillData(data.bill)
+        }
+        getBillDetails()
+    }, [])
     async function handlePayment() {
 
-        if (uniqueServiceNumber.length < 10) {
-            setError('Enter a valid 10 digit Unique Number')
-            return
-        }
-        if (amount <= 0) {
-            setError('Enter a valid Amount')
-            return
-        }
+      
         if (paymentMethod === "Credit Card" && !(credentials.length >= 12)) {
             setError('Enter a valid 12 digit Credit Card Number')
             return
@@ -48,7 +62,7 @@ export default function Form() {
             return
         }
         if (paymentMethod === "UPI" && !(credentials.length >= 10)) {
-            setError('Enter a  valid UPI ID with "@" included')
+            setError('Enter a  valid 10 digit UPI ID ')
             return
         }
         if (paymentMethod === "Net Banking" && !(credentials.length >= 10)) {
@@ -65,13 +79,12 @@ export default function Form() {
         }
         setError('')
         const details = {
-            uniqueServiceNumber,
-            amount,
+           uniqueServiceNumber :  billData.uniqueServiceNumber,
+            amount : billData.amount,
             paymentMethod,
             credentials
         }
-      
-        const res = await fetch("/api/payCustomBill", {
+        const res = await fetch("/api/pay", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -79,24 +92,28 @@ export default function Form() {
             body: JSON.stringify(details),
         })
         const data = await res.json()
-console.log(data)
+
         if (data.status === 'success') {
             router.push(`/paymentstatus?billid=${data.billId}`)
         }
         if (data.status === 'Already Paid') {
             setError('You have already paid bill for this month for the same Unique Number.')
         }
-        
+
 
     }
     return (
-        <div className='w-96 flex flex-col justify-center items-center gap-10 mt-10'>
-            <p className='font-semibold text-xl'>Pay Your Custom Electricity Bills</p>
-            <Input placeholder='Enter Unique Service Number' type='text' value={uniqueServiceNumber}
-                onChange={(e) => setuniqueServiceNumber(e.target.value)} />
-            <Input placeholder='Enter Amount to be paid (in Rs.)' type='text' value={amount}
-                onChange={(e) => setAmount(e.target.value)} />
-            {uniqueServiceNumber.length >= 10 && amount > 0 && <Select onValueChange={(selectedMode) => {
+        <div className=' flex flex-col justify-center items-center gap-10 mt-10'>
+            <p className='font-semibold text-xl'>Pay Via any payment Options</p>
+            {
+                billData && <div className='flex flex-col gap-5 justify-center items-center'>
+                    <p className='font-semibold text-lg'>Bill Details</p>
+                    <p><span className='font-semibold text-xl'>USNo : </span> {billData.uniqueServiceNumber}</p>
+                    <p><span className='font-semibold text-xl'>Month/Year </span> {billData.billMonth} - {billData.billYear}</p>
+                    <p><span className='font-semibold text-xl'>Amount </span> {billData.amount}</p>
+                </div>
+            }
+            {<Select onValueChange={(selectedMode) => {
                 setPaymentMethod(selectedMode)
             }}>
                 <SelectTrigger className="w-96">
@@ -113,19 +130,19 @@ console.log(data)
 
                 </SelectContent>
             </Select>}
-            {paymentMethod === "Credit Card" && <Input placeholder='Enter Credit Card Number' type='text' value={credentials}
+            {paymentMethod === "Credit Card" && <Input className="w-96" placeholder='Enter Credit Card Number' type='text' value={credentials}
                 onChange={(e) => setCredentials(e.target.value)} />}
 
-            {paymentMethod === "Debit Card" && <Input placeholder='Enter Debit Card Number' type='text' value={credentials}
+            {paymentMethod === "Debit Card" && <Input className="w-96" placeholder='Enter Debit Card Number' type='text' value={credentials}
                 onChange={(e) => setCredentials(e.target.value)} />}
 
-            {paymentMethod === "UPI" && <Input placeholder='Enter UPI ID' type='text' value={credentials}
+            {paymentMethod === "UPI" && <Input className="w-96" placeholder='Enter UPI ID' type='text' value={credentials}
                 onChange={(e) => setCredentials(e.target.value)} />}
 
-            {paymentMethod === "Net Banking" && <Input placeholder='Enter Net Banking Number' type='text' value={credentials}
+            {paymentMethod === "Net Banking" && <Input className="w-96" placeholder='Enter Net Banking Number' type='text' value={credentials}
                 onChange={(e) => setCredentials(e.target.value)} />}
 
-            {paymentMethod === "Wallet" && <Input placeholder='Enter Wallet ID' type='text' value={credentials}
+            {paymentMethod === "Wallet" && <Input className="w-96" placeholder='Enter Wallet ID' type='text' value={credentials}
                 onChange={(e) => setCredentials(e.target.value)} />}
 
 
@@ -137,3 +154,4 @@ console.log(data)
         </div>
     )
 }
+

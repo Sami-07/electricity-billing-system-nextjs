@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 export default function Signup() {
     const router = useRouter();
     const [userName, setUserName] = useState('')
@@ -19,7 +19,11 @@ export default function Signup() {
     // }, [session])
     const handleSubmit = async (e) => {
         e.preventDefault();
-console.log("inside submit", userName, email, password, confirmPassword)
+     
+        if(password !== confirmPassword){
+            setMessage("Passwords do not match")
+            return
+        }
         const res = await fetch('/api/signup', {
             method: 'POST',
             headers: {
@@ -29,14 +33,20 @@ console.log("inside submit", userName, email, password, confirmPassword)
         })
         const response = await res.json()
         setMessage(response.message)
-        console.log("response", response)
-
+   
+        if (response.created) {
+            await signIn('credentials', {
+                email,
+                password,
+                callbackUrl: "/",
+            })
+        }
     }
     return (
         <div>
             <div className=' flex justify-center items-center min-h-screen my-10  '>
 
-                <form onSubmit={handleSubmit} className='border-2 rounded-lg flex flex-col w-1/3 gap-7 p-10 py-10' >
+                <form onSubmit={handleSubmit} className='border-2 rounded-lg flex flex-col w-1/2 lg:w-1/3 gap-7 p-10 py-10' >
                     <p className='text-center text-2xl font-semibold'>Create an Account</p>
                     <Input placeholder='Enter your Name' type='text' value={userName} onChange={(e) => setUserName(e.target.value)} />
                     <Input placeholder='Enter your email' type='email' value={email} onChange={(e) => setEmail(e.target.value)} />

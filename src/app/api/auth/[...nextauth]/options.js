@@ -14,10 +14,10 @@ export const authOptions = {
         CredentialsProvider({
             name: "Credentials",
             async authorize(credentials) {
-                console.log("inside");
+            
                 await connectDB();
                 const user = await User.findOne({ email: credentials.email })
-                // console.log(user);
+             
                 if (!user) {
                     return null;
                 }
@@ -25,6 +25,7 @@ export const authOptions = {
                 if (!isPasswordCorrect) {
                     return null;
                 }
+            
                 return user;
             }
         })
@@ -47,7 +48,7 @@ export const authOptions = {
             // console.log("session", session);
             // console.log("token", token);
             session.user = token;
-            console.log("session", session);
+     
             return session;
         }
     }

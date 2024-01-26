@@ -8,13 +8,14 @@ export async function GET(req, res) {
         return NextResponse.json({ exists: false, bills: [] })
     }
     await connectDB()
-    const bills = await Bill.find({ billUser: session.user.id, paymentInitiated: true})
-
-    if (!bills) {
+    const bills = await Bill.find({ billUser: session.user.id, paymentInitiated: false})
+const rejectedBills = await Bill.find({ billUser: session.user.id, paymentInitiated: true, paymentConfirmationStatus:"REJECTED"})
+const allBills = [...bills,...rejectedBills]
+    if (!allBills) {
         return NextResponse.json({ exists: false, bills: [] })
     }
 
-    return NextResponse.json({ exists: true, bills: bills })
+    return NextResponse.json({ exists: true, bills: allBills })
 
 
 }

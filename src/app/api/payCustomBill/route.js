@@ -13,18 +13,24 @@ export async function POST(req, res) {
             return NextResponse.json({ status: "error" })
         }
         const { uniqueServiceNumber, amount, paymentMethod, credentials } = await req.json();
-
+console.log(session)
 
         await connectDB()
-        const updateBill = await Bill.findOneAndUpdate({ uniqueServiceNumber: uniqueServiceNumber, billMonth: billMonth, billYear: billYear, billUser: session.user.id }, {
+        const createBill = await Bill.create({
             paymentInitiated: true,
             paymentConfirmationStatus: "PENDING",
             paymentMethod: paymentMethod,
             credentials: credentials,
+            uniqueServiceNumber: uniqueServiceNumber,
+            billMonth: billMonth,
+            billYear: billYear,
+            billUser: session.user.id,
+            amount: amount,
+            userName: session.user.name
         })
 
 
-        const currentMonthBill = await Bill.findOne({ uniqueServiceNumber: uniqueServiceNumber, billMonth: billMonth, billYear: billYear })
+        const currentMonthBill = await Bill.findOne({ uniqueServiceNumber: uniqueServiceNumber, billMonth: billMonth, billYear: billYear, billUser: session.user.id})
         return NextResponse.json({ status: "success", billId: currentMonthBill._id })
 
     } catch (error) {

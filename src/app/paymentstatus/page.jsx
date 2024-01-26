@@ -9,6 +9,8 @@ export default function PaymentStatus() {
     const billId = params.get('billid')
     const [bill, setBill] = useState(null)
     const [isConfirmed, setIsConfirmed] = useState(false)
+    const [isRejected, setIsRejected] = useState(false)
+    const [isPending, setIsPending] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     useEffect(() => {
         async function getPaymentConfirmationStatus() {
@@ -21,10 +23,16 @@ export default function PaymentStatus() {
                 body: JSON.stringify({ billId }),
             })
             const data = await res.json()
-            console.log("data from api", data)
+
             if (data.confirmed) {
                 setIsConfirmed(true)
 
+            }
+            if (data.rejected) {
+                setIsRejected(true)
+            }
+            if (data.pending) {
+                setIsPending(true)
             }
             if (data.bill) {
                 setBill(data.bill)
@@ -43,11 +51,12 @@ export default function PaymentStatus() {
 
             {!isLoading && <div className='flex flex-col justify-center'>
 
-                {(!isLoading && !isConfirmed) && <div className='text-xl w-1/2 mx-auto text-center my-10  '>
+                {isPending && <div className='text-xl w-1/2 mx-auto text-center my-10  '>
                     <RiVerifiedBadgeFill className='text-9xl mx-auto text-green-500 my-5' />Your Payment has been initiated Successfully!
                     Please wait till the admin confirms the payment details.
                     After verifying the payment info, your payment confirmation will be updated in your profile. </div>}
-                {isConfirmed && <p className='text-3xl text-center my-10 text-green-500 font-semibold'>Your Payment has been confirmed Successfully!</p>}
+                {isConfirmed && <p className='text-3xl text-center my-10 text-green-500 font-semibold'> <RiVerifiedBadgeFill className='text-9xl mx-auto text-green-500 my-5' />Your Payment has been confirmed Successfully!</p>}
+                {isRejected && <p className='text-3xl text-center my-10 text-red-500 font-semibold'>Your Payment has been rejected! The amount will be refunded if deducted. Please try paying again.</p>}
 
 
                 {bill && (

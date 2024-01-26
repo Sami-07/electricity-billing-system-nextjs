@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { FaArrowRightToBracket } from "react-icons/fa6";
 import { useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react'
+import Link from 'next/link';
 
 
 
@@ -12,13 +13,16 @@ export default function Navbar() {
     const [name, setName] = useState("");
     const router = useRouter();
     const session = useSession();
-
+const [isAdmin, setIsAdmin] = useState(false)
     const [isSessionExist, setIsSessionExist] = useState(false);
     useEffect(() => {
 
         if (session && session.data && session.data.user && session.data.user.name) {
             setName(session.data.user.name)
             setIsSessionExist(true);
+            if(session.data.user.role === "ADMIN"){
+                setIsAdmin(true)
+            }
         };
     }, [session])
     return (
@@ -31,16 +35,16 @@ export default function Navbar() {
                 </Avatar>  <span className='md:text-xl'>TSSPDCL</span></div>
             <div className='flex gap-4 items-center capitalize'>
 
-
+           
                 {isSessionExist && <div onClick={() => router.push("/profile")} className='flex items-center gap-2 cursor-pointer'>
 
-                    <Avatar >
+                    {/* <Avatar >
                         <AvatarImage src="https://github.com/shadcn.png" />
                         <AvatarFallback>CN</AvatarFallback>
-                    </Avatar>
+                    </Avatar> */}
 
 
-                    <p className='text-xs md:text-2xl text-white'>{name}</p>
+                    <p className={`text-xs md:text-xl py-1  ${isAdmin ? "bg-yellow-400 text-black" : "bg-purple-500 text-white"} p-2 rounded-xl`}>{name}</p>
                 </div>}
                 {isSessionExist ? <Button className='flex items-center  gap-2 border-2 border-white text-white' variant={'ghost'} onClick={() => signOut()}>
                     <span className='hidden md:block'>Logout </span>
@@ -49,6 +53,10 @@ export default function Navbar() {
                     <span className='hidden md:block'>Login </span>
                     <FaArrowRightToBracket />
                 </Button>}
+                {/* <Button className='flex items-center bg-purple-600  gap-2 border-2 border-white text-white' variant={'ghost'} onClick={() => router.push("/admin")} >
+                    <span className='hidden md:block'>Admin Panel </span>
+                    <FaArrowRightToBracket />
+                </Button> */}
             </div>
         </nav>
 
