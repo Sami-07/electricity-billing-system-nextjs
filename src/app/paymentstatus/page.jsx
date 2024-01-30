@@ -2,7 +2,8 @@
 import React, { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { RiVerifiedBadgeFill } from "react-icons/ri";
-
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 export default function PaymentStatus() {
 
     const params = useSearchParams()
@@ -41,6 +42,50 @@ export default function PaymentStatus() {
         }
         getPaymentConfirmationStatus()
     }, [])
+
+    const generatePDF = () => {
+        const element = document.getElementById('pdf-container');
+
+        if (!element) {
+            console.error('Element with ID "pdf-container" not found.');
+            return;
+        }
+
+        html2canvas(element)
+            .then((canvas) => {
+                const pdfWidth = 210; // A4 page width in mm
+                const pdfHeight = 297; // A4 page height in mm
+
+                const contentWidth = canvas.width;
+                const contentHeight = canvas.height;
+
+                // Calculate the scale factor to fit content on A4 page
+                const scaleFactor = Math.min(pdfWidth / contentWidth, pdfHeight / contentHeight);
+
+                // Create jsPDF instance with adjusted dimensions
+                const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+
+                // Add title to the PDF
+                const title = 'Payment Details';
+                const titleX = pdfWidth / 2; // Centered horizontally
+                const titleY = 10; // Position from the top
+
+                pdf.setFontSize(16);
+                pdf.text(title, titleX, titleY, { align: 'center' });
+
+                // Add content to the PDF, centered
+                const contentX = (pdfWidth - (contentWidth * scaleFactor)) / 2;
+                const contentY = titleY + 10; // Add some spacing between title and content
+
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', contentX, contentY, contentWidth * scaleFactor, contentHeight * scaleFactor);
+                pdf.save('payment_details.pdf');
+            })
+            .catch((error) => {
+                console.error('Error generating PDF:', error);
+            });
+    };
+
+
     return (
         <>
             {isLoading && <div className='flex flex-col justify-center items-center min-h-screen'>
@@ -62,7 +107,7 @@ export default function PaymentStatus() {
                 {bill && (
 
 
-                    <div class="container mx-auto my-8">
+                    <div id="pdf-container" class="container mx-auto my-8">
                         <table class=" w-1/2 mx-auto bg-white border-2    border-gray-300">
                             <tbody className=''>
 
@@ -97,9 +142,17 @@ export default function PaymentStatus() {
                     </div>
                 )}
 
+                <div className='flex justify-center mb-4'>
+                    <button
+                        className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
+                        onClick={generatePDF}
+                    >
+                        Generate PDF
+                    </button>
+                </div>
+            </div>
+            }
 
-
-            </div>}
         </>
     )
 }
